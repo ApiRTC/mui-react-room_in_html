@@ -19,17 +19,15 @@
     <h2>Add ApiRTC Conversation Room in One Minute</h2>
     <p>This page demonstrates using ApiRTC/React with no build tooling.</p>
 
-    <p>A button:</p>
-    <div id="button_container"></div>
+    <!-- <p>A button:</p>
+    <div id="button_container"></div> -->
 
     <p>A room:</p>
-
-    <!-- We will put our React component inside this div. -->
-
     <!-- Draggable DIV -->
     <div id="mydiv">
         <!-- Include a header DIV with the same name as the draggable DIV, followed by "header" -->
-        <div id="mydivheader">Click here to move</div>
+        <div id="mydivheader">Test Room (Click here to move)</div>
+        <!-- We will put our React component inside this div. -->
         <div id="room_container" style="border: medium solid #0078D4;"></div>
     </div>
 
@@ -51,8 +49,17 @@
     <script src="./mui-react-lib/dist/mui-react-lib.production.min.js"></script>
     <script src="./mui-react-room/dist/mui-react-room.production.min.js"></script>
 
-    <!-- Load the CallButton Component -->
+    <!-- Load the Room Component -->
     <script type="module">
+        var domContainer = document.querySelector('#room_container');
+        ReactDOM.render(React.createElement(
+            ApiRtcMuiReactRoom.Room,
+            { name: 'Test' }
+        ), domContainer);
+    </script>
+
+    <!-- Load the CallButton Component -->
+    <!-- <script type="module">
         var domContainer = document.querySelector('#button_container');
         ReactDOM.render(React.createElement(
             ApiRtcMuiReactRoom.CallButton,
@@ -76,16 +83,7 @@
                 }
             }
         ), domContainer);
-    </script>
-
-    <!-- Finally, load the Room Component -->
-    <script type="module">
-        var domContainer = document.querySelector('#room_container');
-        ReactDOM.render(React.createElement(
-            ApiRtcMuiReactRoom.Room,
-            { name: 'Test' }
-        ), domContainer);
-    </script>
+    </script> -->
 
     <script>
         dragElement(document.getElementById("mydiv"));
