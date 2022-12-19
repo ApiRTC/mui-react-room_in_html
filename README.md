@@ -1,4 +1,4 @@
-# Sample Http with react
+# Sample Http page with MaterialUI/ApiRTC/React Room implementation
 
 ## Development guidelines
 
