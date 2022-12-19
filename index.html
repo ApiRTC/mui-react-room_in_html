@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Add React in One Minute</title>
+    <!-- Load Google Material icons (required for mui Icon to work) -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <link href="./style.css" rel="stylesheet" />
+
+    <!-- To prevent caching libraries DEV only : DOES NOT WORK, run http-server -c-1 WORKS ! -->
+    <!-- <meta http-equiv="cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+     -->
+</head>
+
+<body>
+    <h2>Add ApiRTC Conversation Room in One Minute</h2>
+    <p>This page demonstrates using ApiRTC/React with no build tooling.</p>
+
+    <p>A button:</p>
+    <div id="button_container"></div>
+
+    <p>A room:</p>
+
+    <!-- We will put our React component inside this div. -->
+
+    <!-- Draggable DIV -->
+    <div id="mydiv">
+        <!-- Include a header DIV with the same name as the draggable DIV, followed by "header" -->
+        <div id="mydivheader">Click here to move</div>
+        <div id="room_container" style="border: medium solid #0078D4;"></div>
+    </div>
+
+    <!-- Load React, required by react-lib (as peer dependency) -->
+    <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+
+    <!-- Load Material UI -->
+    <script src="https://unpkg.com/@emotion/react@11.10.5/dist/emotion-react.umd.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@emotion/styled@11.10.5/dist/emotion-styled.umd.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@mui/material@latest/umd/material-ui.production.min.js" crossorigin></script>
+
+    <!-- Load ApiRTC -->
+    <script type="text/javascript" src="https://cloud.apirtc.com/apiRTC/apiRTC-latest.min.js"></script>
+
+    <!-- Load ApiRTC React libs -->
+    <!-- <script src="./react-lib.production.min.js"></script> commented out if react-lib is a dependency (not a peer dep) of mui-react-room -->
+    <script src="./mui-react-lib.production.min.js"></script>
+    <script src="./mui-react-room.production.min.js"></script>
+
+    <!-- Load the CallButton Component -->
+    <script type="module">
+        var domContainer = document.querySelector('#button_container');
+        ReactDOM.render(React.createElement(
+            ApiRtcMuiReactRoom.CallButton,
+            {
+                url: 'http://customer01.localhost:3000/api/call', //?ref=btn01
+                requestInit: { method: 'POST' },
+                onSuccess: (json) => {
+                    console.log('SUCCESS', json)
+                    var domContainer = document.querySelector('#room_container');
+                    ReactDOM.render(React.createElement(
+                        ApiRtcMuiReactRoom.Room,
+                        {
+                            name: json.conversationName,
+                            credentials: { apiKey: 'e17da9125276f8e8ad4e91222bbd5a36' },
+                            registerInformation: { cloudUrl: 'https://valid2.apirtc.com' }
+                        }
+                    ), domContainer);
+                },
+                onError: (error) => {
+                    console.error('ERROR', error)
+                }
+            }
+        ), domContainer);
+    </script>
+
+    <!-- Finally, load the Room Component -->
+    <script type="module">
+        var domContainer = document.querySelector('#room_container');
+        ReactDOM.render(React.createElement(
+            ApiRtcMuiReactRoom.Room,
+            { name: 'Test' }
+        ), domContainer);
+    </script>
+
+    <script>
+        dragElement(document.getElementById("mydiv"));
+
+        function dragElement(elmnt) {
+            var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            if (document.getElementById(elmnt.id + "header")) {
+                // if present, the header is where you move the DIV from:
+                document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+            } else {
+                // otherwise, move the DIV from anywhere inside the DIV:
+                elmnt.onmousedown = dragMouseDown;
+            }
+
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                // get the mouse cursor position at startup:
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                // call a function whenever the cursor moves:
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                // calculate the new cursor position:
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                // set the element's new position:
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                // stop moving when mouse button is released:
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+    </script>
+
+</body>
+
+</html>

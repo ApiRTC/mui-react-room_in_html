@@ -1,0 +1,9 @@
+[submodule "react-lib"]
+	path = react-lib
+	url = git@github.com:ApiRTC/react-lib.git
+[submodule "mui-react-lib"]
+	path = mui-react-lib
+	url = git@github.com:ApiRTC/mui-react-lib.git
+[submodule "mui-react-room"]
+	path = mui-react-room
+	url = git@github.com:ApiRTC/mui-react-room.git
