@@ -9,4 +9,4 @@ js script reload by entering it's full path url and hit refresh, for example htt
 
 For https:
 
-`http-server -c-1 --ssl -C /home/kmoyse/private/selfsigned.crt -K /home/kmoyse/private/selfsigned.key`
+`http-server -c-1 --ssl -C ./certs/selfsigned.crt -K ./certs/selfsigned.key`
