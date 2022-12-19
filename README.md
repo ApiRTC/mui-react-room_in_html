@@ -10,7 +10,6 @@ Then (Note that npm run build requires sudo access to npm link submodules):
 
 ```
 cd mui-react-room_in_html
-npm run install
 npm run build
 ```
 

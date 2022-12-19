@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "start": "http-server -c-1 --ssl -C ./certs/selfsigned.crt -K ./certs/selfsigned.key",
-    "install": "cd react-lib;npm install;cd -;cd mui-react-lib;npm install;cd -;cd mui-react-room;npm install;cd -",
-    "build": "cd react-lib;npm run build&&sudo npm link;cd -;cd mui-react-lib;npm run build&&sudo npm link;cd -;cd mui-react-room;npm link @apirtc/react-lib @apirtc/mui-react-lib&&npm run build;cd -"
+    "build": "cd react-lib;npm install&&npm run build&&sudo npm link;cd -;cd mui-react-lib;npm install&&npm run build&&sudo npm link;cd -;cd mui-react-room;npm install&&npm link @apirtc/react-lib @apirtc/mui-react-lib&&npm run build;cd -"
   }
 }
