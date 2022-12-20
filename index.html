@@ -19,8 +19,8 @@
     <h2>Add ApiRTC Conversation Room in One Minute</h2>
     <p>This page demonstrates using ApiRTC/React with no build tooling.</p>
 
-    <!-- <p>A button:</p>
-    <div id="button_container"></div> -->
+    <p>A button:</p>
+    <div id="button_container"></div>
 
     <p>A room:</p>
     <!-- Draggable DIV -->
@@ -69,14 +69,24 @@
                 onSuccess: (json) => {
                     console.log('SUCCESS', json)
                     var domContainer = document.querySelector('#room_container');
-                    ReactDOM.render(React.createElement(
-                        ApiRtcMuiReactRoom.Room,
-                        {
-                            name: json.conversationName,
-                            credentials: { apiKey: 'e17da9125276f8e8ad4e91222bbd5a36' },
-                            registerInformation: { cloudUrl: 'https://valid2.apirtc.com' }
-                        }
-                    ), domContainer);
+
+                    // Unmount the previous Room if there was one, otherwise the next
+                    // won't behave fine (for some reason to be investigated ?)
+                    ReactDOM.unmountComponentAtNode(domContainer);
+
+                    console.log('Timeout 1s...')
+                    setTimeout(() => {
+                        console.log('Rendering Room', json.conversationName)
+                        ReactDOM.render(React.createElement(
+                            ApiRtcMuiReactRoom.Room,
+                            {
+                                name: json.conversationName,
+                                credentials: { apiKey: 'e17da9125276f8e8ad4e91222bbd5a36' },
+                                registerInformation: { cloudUrl: 'https://valid2.apirtc.com' }
+                            }
+                        ), domContainer)
+                    }, 1000)
+
                 },
                 onError: (error) => {
                     console.error('ERROR', error)
