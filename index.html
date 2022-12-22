@@ -54,7 +54,12 @@
         var domContainer = document.querySelector('#room_container');
         ReactDOM.render(React.createElement(
             ApiRtcMuiReactRoom.Room,
-            { name: 'Test' }
+            {
+                name: 'Test',
+                onLeave: () => {
+                    ReactDOM.unmountComponentAtNode(domContainer);
+                }
+            }
         ), domContainer);
     </script>
 
