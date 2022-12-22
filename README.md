@@ -6,6 +6,10 @@ Clone this repo with --recurse-submodules:
 
 `git clone --recurse-submodules git@github.com:ApiRTC/mui-react-room_in_html.git`
 
+Or Pull:
+
+`git pull --recurse-submodules`
+
 Then (Note that npm run build requires sudo access to npm link submodules):
 
 ```
