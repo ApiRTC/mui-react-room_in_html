@@ -19,8 +19,117 @@
     <h2>Add ApiRTC Conversation Room in One Minute</h2>
     <p>This page demonstrates using ApiRTC/React with no build tooling.</p>
 
-    <p>A button:</p>
+    <p>A button (react):</p>
     <div id="button_container"></div>
+    <p>A button (iframe):</p>
+    <iframe id="iframe" src="http://localhost:6002/" frameBorder="0" scrolling="no"></iframe>
+
+    <p>A button with SSE:</p>
+
+    <script>
+        function doRenderRoom(conversationName) {
+            var domContainer = document.querySelector('#room_container');
+
+            // Unmount the previous Room if there was one, otherwise the next
+            // won't behave fine (for some reason to be investigated ?)
+            ReactDOM.unmountComponentAtNode(domContainer);
+
+            console.log('Timeout 1s...')
+            setTimeout(() => {
+                console.log('Rendering Room', conversationName)
+                ReactDOM.render(React.createElement(
+                    ApiRtcMuiReactRoom.Room,
+                    {
+                        name: conversationName,
+                        credentials: { apiKey: 'e17da9125276f8e8ad4e91222bbd5a36' },
+                        registerInformation: { cloudUrl: 'https://valid2.apirtc.com' }
+                    }
+                ), domContainer)
+            }, 1000)
+        }
+    </script>
+
+    <script>
+
+        function isFunction(functionToCheck) {
+            return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
+        }
+
+        function debounce(func, wait) {
+            var timeout;
+            var waitFunc;
+
+            return function () {
+                if (isFunction(wait)) {
+                    waitFunc = wait;
+                }
+                else {
+                    waitFunc = function () { return wait };
+                }
+
+                var context = this, args = arguments;
+                var later = function () {
+                    timeout = null;
+                    func.apply(context, args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, waitFunc());
+            };
+        }
+
+        // reconnectFrequencySeconds doubles every retry
+        var reconnectFrequencySeconds = 1;
+
+        var reconnectFunc = debounce(function () {
+            setupEventSource();
+            // Double every attempt to avoid overwhelming server
+            reconnectFrequencySeconds *= 2;
+            // Max out at ~1 minute as a compromise between user experience and server load
+            if (reconnectFrequencySeconds >= 64) {
+                reconnectFrequencySeconds = 64;
+            }
+        }, function () { return reconnectFrequencySeconds * 1000 });
+
+        function setupEventSource() {
+            const eventSource = new EventSource('http://localhost:8084/v2/conversation/c992fedb72b4fd7092321283?apiKey=e17da9125276f8e8ad4e91222bbd5a36');
+            eventSource.onmessage = function (e) {
+                // Handle even here
+            };
+            eventSource.onopen = function (e) {
+                // Reset reconnect frequency upon successful connection
+                reconnectFrequencySeconds = 1;
+            };
+            eventSource.onerror = function (e) {
+                console.log("onerror", e)
+                eventSource.close();
+                reconnectFunc();
+            };
+            eventSource.addEventListener('ack', (e) => {
+                // Do something - event data will be in e.data,
+                console.log(`${new Date} ack:`, e.data)
+            });
+            eventSource.addEventListener('conversation', (e) => {
+                // Do something - event data will be in e.data,
+                console.log(`${new Date} conversation:`, e.data)
+                doRenderRoom(e.data)
+            });
+            // Window.onunload = (event) => {
+            //     eventSource
+            // };
+            // 
+            window.onbeforeunload = function () {
+                eventSource.close();
+            }
+        }
+
+
+        function doCall() {
+            console.log("doCall()")
+            setupEventSource();
+        }
+
+    </script>
+    <button onclick="doCall()">Call</button>
 
     <p>A room:</p>
     <!-- Draggable DIV -->
@@ -50,7 +159,7 @@
     <script src="./mui-react-room/dist/mui-react-room.production.min.js"></script>
 
     <!-- Load the Room Component -->
-    <script type="module">
+    <!-- <script type="module">
         var domContainer = document.querySelector('#room_container');
         ReactDOM.render(React.createElement(
             ApiRtcMuiReactRoom.Room,
@@ -61,36 +170,151 @@
                 }
             }
         ), domContainer);
+    </script> -->
+
+    <!-- iframe script -->
+    <script type="module">
+
+        const callButtonIFrame = document.getElementById('iframe');
+
+        window.document.addEventListener('readystatechange', () => {
+            if (window.document.readyState == 'complete') {
+                const message = {
+                    tenantName: "customer01",
+                    serviceName: "service01",
+                    serviceId: "c992fedb72b4fd7092321283",
+                    // Commented out : does not work : Uncaught DOMException: Function object could not be cloned.
+                    // onConversation: (conversationName) => {
+                    //     console.log("onConversation", conversationName)
+                    // }
+                }
+                console.log("POSTING message", message)
+                document.getElementById('iframe').contentWindow.postMessage(message, 'http://localhost:6002')
+            }
+        });
+
+        const onWatchEventHandler = (event) => {
+            console.log('onWatchEventHandler', event.data)
+            if (event.data.conversationName) {
+                const conversationName = event.data.conversationName;
+                var domContainer = document.querySelector('#room_container');
+                // Unmount the previous Room if there was one, otherwise the next
+                // won't behave fine (for some reason to be investigated ?)
+                ReactDOM.unmountComponentAtNode(domContainer);
+                setTimeout(() => {
+                    console.log('Rendering Room', conversationName)
+                    ReactDOM.render(React.createElement(
+                        ApiRtcMuiReactRoom.Room,
+                        {
+                            name: conversationName,
+                            credentials: { apiKey: 'e17da9125276f8e8ad4e91222bbd5a36' },
+                            registerInformation: { cloudUrl: 'https://valid2.apirtc.com' }
+                        }
+                    ), domContainer)
+                }, 1000)
+            } else if (event.data.height) {
+                console.log("redefine display", event.data.height, event.data.width)
+                callButtonIFrame.style.height = event.data.height + 'px';
+                callButtonIFrame.style.width = event.data.width + 'px';
+                // Note :
+                // I had to add 
+                //#react-target {
+                // display: inline-flex;
+                // }
+                // in call button iframe content to not get width overridden to 300px by iframe default sizing.
+            }
+            else {
+                console.log('event.data.conversationName=', event.data.conversationName)
+            }
+        }
+
+        window.addEventListener('message', onWatchEventHandler)
+
     </script>
 
-    <!-- Load the CallButton Component -->
     <!-- <script type="module">
+        // Declare an EventSource
+        console.log("EventSource", 'http://localhost:8084/stream-sse/calls/63bc1aa8a4e65ea0bce4a21c')
+        const eventSource = new EventSource('http://localhost:8084/stream-sse/calls/63bc1aa8a4e65ea0bce4a21c');
+        // Handler for events without an event name specified
+        eventSource.onmessage = (e) => {
+            // Do something - event data will be in e.data
+            console.log("onmessage", e)
+            eventSource.close()
+        };
+        // Handler for events named 'picked-up' only
+        eventSource.addEventListener('picked-up', (e) => {
+            // Do something - event data will be in e.data,
+            console.log("picked-up", e)
+            eventSource.close()
+        });
+        eventSource.addEventListener('not-found', (e) => {
+            // Do something - event data will be in e.data,
+            console.log("not-found", e)
+            eventSource.close()
+        });
+    </script> -->
+
+    <!-- <script type="module">
+
+        // Declare an EventSource
+        // console.log("EventSource", 'http://localhost:8084/stream-sse/topics/foo')
+        // const eventSource = new EventSource('http://localhost:8084/stream-sse/topics/foo');
+        // // Handler for events without an event name specified
+        // eventSource.onmessage = (e) => {
+        //     // Do something - event data will be in e.data
+        //     console.log("onmessage", e)
+        // };
+        // // Handler for events named 'empty' only
+        // eventSource.addEventListener('ack', (e) => {
+        //     // Do something - event data will be in e.data,
+        //     console.log("ack", new Date, e)
+        // });
+        // // Handler for events named 'empty' only
+        // eventSource.addEventListener('empty', (e) => {
+        //     // Do something - event data will be in e.data,
+        //     console.log("empty", e)
+        //     eventSource.close()
+        // });
+        // //
+        // eventSource.addEventListener('not-empty', (e) => {
+        //     // Do something - event data will be in e.data,
+        //     console.log("not-empty", e)
+        //     eventSource.close()
+        // });
+        // eventSource.onerror = function (e) {
+        //     //eventSource.close();
+        //     console.log("onerror, reconnect later ?", e)
+        //     //reconnectFunc();
+        // };
+        // eventSource.onopen = (e) => {
+        //     console.log("onopen", e)
+        // };
+     </script> -->
+
+    <!-- Load the CallButton Component -->
+    <script type="module">
+
+        //const url = 'http://customer01.localhost:3000/api/calls';
+        const url = 'http://localhost:8084/calls';
+
         var domContainer = document.querySelector('#button_container');
         ReactDOM.render(React.createElement(
             ApiRtcMuiReactRoom.CallButton,
             {
-                url: 'http://customer01.localhost:3000/api/call', //?ref=btn01
-                requestInit: { method: 'POST' },
+                url: url,
+                requestInit: {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': 'apiKey e17da9125276f8e8ad4e91222bbd5a36'
+                    },
+                },
+                serviceId: "c992fedb72b4fd7092321283",
                 onSuccess: (json) => {
                     console.log('SUCCESS', json)
-                    var domContainer = document.querySelector('#room_container');
-
-                    // Unmount the previous Room if there was one, otherwise the next
-                    // won't behave fine (for some reason to be investigated ?)
-                    ReactDOM.unmountComponentAtNode(domContainer);
-
-                    console.log('Timeout 1s...')
-                    setTimeout(() => {
-                        console.log('Rendering Room', json.conversationName)
-                        ReactDOM.render(React.createElement(
-                            ApiRtcMuiReactRoom.Room,
-                            {
-                                name: json.conversationName,
-                                credentials: { apiKey: 'e17da9125276f8e8ad4e91222bbd5a36' },
-                                registerInformation: { cloudUrl: 'https://valid2.apirtc.com' }
-                            }
-                        ), domContainer)
-                    }, 1000)
+                    doRenderRoom(json.conversationName)
 
                 },
                 onError: (error) => {
@@ -98,7 +322,7 @@
                 }
             }
         ), domContainer);
-    </script> -->
+    </script>
 
     <script>
         dragElement(document.getElementById("mydiv"));
@@ -148,3 +372,30 @@
 </body>
 
 </html>
+
+<!-- 
+    //Iframe script
+    // Commented out because this is prevented by CORS
+// function resizeIFrameToFitContent(iFrame) {
+//     iFrame.width = iFrame.contentWindow.document.body.scrollWidth;
+//     iFrame.height = iFrame.contentWindow.document.body.scrollHeight;
+// }
+// callButtonIFrame.addEventListener('load', function () {
+//     callButtonIFrame.style.height = callButtonIFrame.contentWindow.body.scrollHeight + 'px';
+//     callButtonIFrame.style.width = callButtonIFrame.contentWindow.body.scrollWidth + 'px';
+// });
+//resizeIFrameToFitContent(callButtonIFrame);
+
+// Commented out because this is prevented by CORS
+// got error :
+// Uncaught DOMException: Permission denied to access property "callButtonProps" on cross-origin object
+// in the iframe content code trying to retrieve window.callButtonProps
+// console.log("Setting callButtonProps")
+// callButtonIFrame.contentWindow.callButtonProps = {
+//     tenantName: "customer01",
+//     serviceName: "service01",
+//     serviceId: "c992fedb72b4fd7092321283",
+//     onConversation: (conversationName) => {
+//         console.log("onConversation", conversationName)
+//     }
+// }; -->
