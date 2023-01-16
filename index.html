@@ -51,6 +51,9 @@
 
     <script>
 
+        const apiKey = 'e17da9125276f8e8ad4e91222bbd5a36';
+        const serviceId = 'c992fedb72b4fd7092321283';
+
         function isFunction(functionToCheck) {
             return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
         }
@@ -90,8 +93,13 @@
             }
         }, function () { return reconnectFrequencySeconds * 1000 });
 
+        var uuid = '';
+
+        var eventSource;
+
         function setupEventSource() {
-            const eventSource = new EventSource('http://localhost:8084/v2/conversation/c992fedb72b4fd7092321283?apiKey=e17da9125276f8e8ad4e91222bbd5a36');
+            eventSource = new EventSource(`http://localhost:8084/v2/callers?apiKey=${apiKey}&topic=${serviceId}`);
+
             eventSource.onmessage = function (e) {
                 // Handle even here
             };
@@ -107,6 +115,8 @@
             eventSource.addEventListener('ack', (e) => {
                 // Do something - event data will be in e.data,
                 console.log(`${new Date} ack:`, e.data)
+
+                uuid = e.data;
             });
             eventSource.addEventListener('conversation', (e) => {
                 // Do something - event data will be in e.data,
@@ -117,19 +127,53 @@
             //     eventSource
             // };
             // 
-            window.onbeforeunload = function () {
-                eventSource.close();
-            }
+
         }
 
+        function deleteCaller() {
+            fetch(`http://localhost:8084/v2/callers/${uuid}`,
+                {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `apiKey ${apiKey}`,
+                        'Content-Type': 'application/json',
+                    }
+                }).then(response => {
+                    if (response.status === 200 || response.status === 201) {
+                        console.log('deleteCaller OK')
+                        return
+                    }
+                    console.error("delete callers|Wrong status", response.status)
+                }).catch((error) => {
+                    console.error('delete callers', error)
+                    throw error;
+                }).finally(() => {
+                    eventSource.close();
+                })
+        }
 
         function doCall() {
             console.log("doCall()")
             setupEventSource();
         }
 
+        function stopCall() {
+            console.log("stopCall()")
+            deleteCaller();
+        }
+
+        window.onunload = () => {
+            deleteCaller();
+        }
+
+        window.onbeforeunload = () => {
+            deleteCaller();
+        }
+
     </script>
     <button onclick="doCall()">Call</button>
+
+    <button onclick="stopCall()">stop</button>
 
     <p>A room:</p>
     <!-- Draggable DIV -->
