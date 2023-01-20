@@ -24,6 +24,7 @@
     <p>A button (iframe):</p>
     <iframe id="iframe" src="http://localhost:6002/" frameBorder="0" scrolling="no"></iframe>
 
+    <hr>
     <p>A button with SSE:</p>
 
     <script src="./meet-service-lib/dist/meet-service-lib.production.min.js"></script>
@@ -63,9 +64,15 @@
         function doCall() {
             console.log("doCall()")
             //setupEventSource();
-            caller = new ApiRtcMeetServiceLib.Caller(apiKey, topic, (conversationName) => {
-                doRenderRoom(conversationName)
-            })
+            caller = new ApiRtcMeetServiceLib.Caller(apiKey, topic,
+                {
+                    onConversation: (conversationName) => {
+                        doRenderRoom(conversationName)
+                    },
+                    onConnected: (connected) => {
+                        document.getElementById("connected").innerHTML = new Boolean(connected).toString();
+                    }
+                })
         }
 
         function stopCall() {
@@ -85,9 +92,11 @@
         }
 
     </script>
-    <button onclick="doCall()">Call</button>
 
+    <button onclick="doCall()">Call</button>
     <button onclick="stopCall()">stop</button>
+    <h2>SSE Connected: <span id="connected"></span></h2>
+    <hr>
 
     <p>A room:</p>
     <!-- Draggable DIV -->

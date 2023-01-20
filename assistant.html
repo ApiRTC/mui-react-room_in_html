@@ -47,6 +47,8 @@
 
     <h2>Number of callers: <span id="callers-size"></span></h2>
 
+    <h2>SSE Connected: <span id="connected"></span></h2>
+
     <button onclick="answer()">Answer</button>
 
     <script>
@@ -58,9 +60,15 @@
 
         document.getElementById("conversation-name").innerHTML = conversationName;
 
-        const callee = new ApiRtcMeetServiceLib.Callee(apiKey, topic, (size) => {
-            document.getElementById("callers-size").innerHTML = size;
-        })
+        const callee = new ApiRtcMeetServiceLib.Callee(apiKey, topic,
+            {
+                onCallersSize: (size) => {
+                    document.getElementById("callers-size").innerHTML = size;
+                },
+                onConnected: (connected) => {
+                    document.getElementById("connected").innerHTML = new Boolean(connected).toString();
+                }
+            })
 
         function answer() {
             callee.answer(conversationName).then(() => {
