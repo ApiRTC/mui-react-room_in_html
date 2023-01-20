@@ -7,3 +7,6 @@
 [submodule "mui-react-room"]
 	path = mui-react-room
 	url = git@github.com:ApiRTC/mui-react-room.git
+[submodule "meet-service-lib"]
+	path = meet-service-lib
+	url = git@github.com:kmoyse-apizee/meet-service-lib.git

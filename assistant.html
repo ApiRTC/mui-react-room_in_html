@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Add ApiRTC in One Minute in Html Page</title>
+    <!-- Load Google Material icons (required for mui Icon to work) -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <link href="./style.css" rel="stylesheet" />
+
+    <!-- To prevent caching libraries DEV only : DOES NOT WORK, run http-server -c-1 WORKS ! -->
+    <!-- <meta http-equiv="cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+     -->
+</head>
+
+<body>
+    <!-- Load React, required by react-lib (as peer dependency) -->
+    <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+
+    <!-- Load Material UI -->
+    <script src="https://unpkg.com/@emotion/react@11.10.5/dist/emotion-react.umd.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@emotion/styled@11.10.5/dist/emotion-styled.umd.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@mui/material@latest/umd/material-ui.production.min.js" crossorigin></script>
+
+    <!-- Load ApiRTC -->
+    <script type="text/javascript" src="https://cloud.apirtc.com/apiRTC/apiRTC-latest.min.js"></script>
+
+    <!-- Load ApiRTC React libs -->
+    <!-- <script src="./react-lib.production.min.js"></script> commented out if react-lib is a dependency (not a peer dep) of mui-react-room -->
+    <script src="./mui-react-lib/dist/mui-react-lib.production.min.js"></script>
+    <script src="./mui-react-room/dist/mui-react-room.production.min.js"></script>
+
+    <!-- Load ApiRTC Meet Service libs -->
+    <script src="./meet-service-lib/dist/meet-service-lib.production.min.js"></script>
+
+    <h1>Assistant App</h1>
+    <p>This page demonstrates using ApiRTC/React with no build tooling.</p>
+
+    -->
+
+    <h2>Conversation Name: <span id="conversation-name"></span></h2>
+    <div id="room-container"></div>
+
+    <h2>Number of callers: <span id="callers-size"></span></h2>
+
+    <button onclick="answer()">Answer</button>
+
+    <script>
+        const cloudUrl = 'https://valid2.apirtc.com';
+        const apiKey = 'e17da9125276f8e8ad4e91222bbd5a36';
+        const topic = 'c992fedb72b4fd7092321283';
+
+        const conversationName = self.crypto.randomUUID();
+
+        document.getElementById("conversation-name").innerHTML = conversationName;
+
+        const callee = new ApiRtcMeetServiceLib.Callee(apiKey, topic, (size) => {
+            document.getElementById("callers-size").innerHTML = size;
+        })
+
+        function answer() {
+            callee.answer(conversationName).then(() => {
+                console.log("Answer sent")
+            }).catch(() => {
+                console.error("Failed to answer")
+            })
+        }
+
+        function doRenderRoom(conversationName) {
+            var domContainer = document.querySelector('#room-container');
+
+            // Unmount the previous Room if there was one, otherwise the next
+            // won't behave fine (for some reason to be investigated ?)
+            ReactDOM.unmountComponentAtNode(domContainer);
+
+            console.log('Timeout 1s...')
+            setTimeout(() => {
+                console.log('Rendering Room', conversationName)
+                ReactDOM.render(React.createElement(
+                    ApiRtcMuiReactRoom.Room,
+                    {
+                        name: conversationName,
+                        credentials: { apiKey: apiKey },
+                        registerInformation: { cloudUrl: cloudUrl }
+                    }
+                ), domContainer)
+            }, 1000)
+        }
+
+        doRenderRoom(conversationName)
+    </script>
+</body>
+
+</html>

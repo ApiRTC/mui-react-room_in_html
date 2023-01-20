@@ -26,6 +26,8 @@
 
     <p>A button with SSE:</p>
 
+    <script src="./meet-service-lib/dist/meet-service-lib.production.min.js"></script>
+
     <script>
         function doRenderRoom(conversationName) {
             var domContainer = document.querySelector('#room_container');
@@ -50,124 +52,36 @@
     </script>
 
     <script>
+        ApiRtcMeetServiceLib.setLogLevel('debug')
 
+        const cloudUrl = 'https://valid2.apirtc.com';
         const apiKey = 'e17da9125276f8e8ad4e91222bbd5a36';
-        const serviceId = 'c992fedb72b4fd7092321283';
+        const topic = 'c992fedb72b4fd7092321283';
 
-        function isFunction(functionToCheck) {
-            return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
-        }
-
-        function debounce(func, wait) {
-            var timeout;
-            var waitFunc;
-
-            return function () {
-                if (isFunction(wait)) {
-                    waitFunc = wait;
-                }
-                else {
-                    waitFunc = function () { return wait };
-                }
-
-                var context = this, args = arguments;
-                var later = function () {
-                    timeout = null;
-                    func.apply(context, args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, waitFunc());
-            };
-        }
-
-        // reconnectFrequencySeconds doubles every retry
-        var reconnectFrequencySeconds = 1;
-
-        var reconnectFunc = debounce(function () {
-            setupEventSource();
-            // Double every attempt to avoid overwhelming server
-            reconnectFrequencySeconds *= 2;
-            // Max out at ~1 minute as a compromise between user experience and server load
-            if (reconnectFrequencySeconds >= 64) {
-                reconnectFrequencySeconds = 64;
-            }
-        }, function () { return reconnectFrequencySeconds * 1000 });
-
-        var uuid = '';
-
-        var eventSource;
-
-        function setupEventSource() {
-            eventSource = new EventSource(`http://localhost:8084/v2/callers?apiKey=${apiKey}&topic=${serviceId}`);
-
-            eventSource.onmessage = function (e) {
-                // Handle even here
-            };
-            eventSource.onopen = function (e) {
-                // Reset reconnect frequency upon successful connection
-                reconnectFrequencySeconds = 1;
-            };
-            eventSource.onerror = function (e) {
-                console.log("onerror", e)
-                eventSource.close();
-                reconnectFunc();
-            };
-            eventSource.addEventListener('ack', (e) => {
-                // Do something - event data will be in e.data,
-                console.log(`${new Date} ack:`, e.data)
-
-                uuid = e.data;
-            });
-            eventSource.addEventListener('conversation', (e) => {
-                // Do something - event data will be in e.data,
-                console.log(`${new Date} conversation:`, e.data)
-                doRenderRoom(e.data)
-            });
-            // Window.onunload = (event) => {
-            //     eventSource
-            // };
-            // 
-
-        }
-
-        function deleteCaller() {
-            fetch(`http://localhost:8084/v2/callers/${uuid}`,
-                {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `apiKey ${apiKey}`,
-                        'Content-Type': 'application/json',
-                    }
-                }).then(response => {
-                    if (response.status === 200 || response.status === 201) {
-                        console.log('deleteCaller OK')
-                        return
-                    }
-                    console.error("delete callers|Wrong status", response.status)
-                }).catch((error) => {
-                    console.error('delete callers', error)
-                    throw error;
-                }).finally(() => {
-                    eventSource.close();
-                })
-        }
+        var caller;
 
         function doCall() {
             console.log("doCall()")
-            setupEventSource();
+            //setupEventSource();
+            caller = new ApiRtcMeetServiceLib.Caller(apiKey, topic, (conversationName) => {
+                doRenderRoom(conversationName)
+            })
         }
 
         function stopCall() {
             console.log("stopCall()")
-            deleteCaller();
+            //deleteCaller();
+            caller.close()
         }
 
         window.onunload = () => {
-            deleteCaller();
+            //deleteCaller();
+            caller.close()
         }
 
         window.onbeforeunload = () => {
-            deleteCaller();
+            //deleteCaller();
+            caller.close()
         }
 
     </script>
@@ -276,66 +190,6 @@
 
     </script>
 
-    <!-- <script type="module">
-        // Declare an EventSource
-        console.log("EventSource", 'http://localhost:8084/stream-sse/calls/63bc1aa8a4e65ea0bce4a21c')
-        const eventSource = new EventSource('http://localhost:8084/stream-sse/calls/63bc1aa8a4e65ea0bce4a21c');
-        // Handler for events without an event name specified
-        eventSource.onmessage = (e) => {
-            // Do something - event data will be in e.data
-            console.log("onmessage", e)
-            eventSource.close()
-        };
-        // Handler for events named 'picked-up' only
-        eventSource.addEventListener('picked-up', (e) => {
-            // Do something - event data will be in e.data,
-            console.log("picked-up", e)
-            eventSource.close()
-        });
-        eventSource.addEventListener('not-found', (e) => {
-            // Do something - event data will be in e.data,
-            console.log("not-found", e)
-            eventSource.close()
-        });
-    </script> -->
-
-    <!-- <script type="module">
-
-        // Declare an EventSource
-        // console.log("EventSource", 'http://localhost:8084/stream-sse/topics/foo')
-        // const eventSource = new EventSource('http://localhost:8084/stream-sse/topics/foo');
-        // // Handler for events without an event name specified
-        // eventSource.onmessage = (e) => {
-        //     // Do something - event data will be in e.data
-        //     console.log("onmessage", e)
-        // };
-        // // Handler for events named 'empty' only
-        // eventSource.addEventListener('ack', (e) => {
-        //     // Do something - event data will be in e.data,
-        //     console.log("ack", new Date, e)
-        // });
-        // // Handler for events named 'empty' only
-        // eventSource.addEventListener('empty', (e) => {
-        //     // Do something - event data will be in e.data,
-        //     console.log("empty", e)
-        //     eventSource.close()
-        // });
-        // //
-        // eventSource.addEventListener('not-empty', (e) => {
-        //     // Do something - event data will be in e.data,
-        //     console.log("not-empty", e)
-        //     eventSource.close()
-        // });
-        // eventSource.onerror = function (e) {
-        //     //eventSource.close();
-        //     console.log("onerror, reconnect later ?", e)
-        //     //reconnectFunc();
-        // };
-        // eventSource.onopen = (e) => {
-        //     console.log("onopen", e)
-        // };
-     </script> -->
-
     <!-- Load the CallButton Component -->
     <script type="module">
 
@@ -443,3 +297,38 @@
 //         console.log("onConversation", conversationName)
 //     }
 // }; -->
+
+<!-- // function isFunction(functionToCheck) {
+    //     return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
+    // }
+
+    // function debounce(func, wait) {
+    //     var timeout;
+    //     var waitFunc;
+
+    //     return function () {
+    //         if (isFunction(wait)) {
+    //             waitFunc = wait;
+    //         }
+    //         else {
+    //             waitFunc = function () { return wait };
+    //         }
+
+    //         var context = this, args = arguments;
+    //         var later = function () {
+    //             timeout = null;
+    //             func.apply(context, args);
+    //         };
+    //         clearTimeout(timeout);
+    //         timeout = setTimeout(later, waitFunc());
+    //     };
+    // }
+    // var reconnectFunc = debounce(function () {
+    //     setupEventSource();
+    //     // Double every attempt to avoid overwhelming server
+    //     reconnectFrequencySeconds *= 2;
+    //     // Max out at ~1 minute as a compromise between user experience and server load
+    //     if (reconnectFrequencySeconds >= 64) {
+    //         reconnectFrequencySeconds = 64;
+    //     }
+    // }, function () { return reconnectFrequencySeconds * 1000 }); -->
