@@ -27,7 +27,7 @@
     <hr>
     <p>A button with SSE:</p>
 
-    <script src="./meet-service-lib/dist/meet-service-lib.production.min.js"></script>
+    <script src="./meet-service-lib/meet-service-tslib/dist/meet-service-tslib.production.min.js"></script>
 
     <script>
         function doRenderRoom(conversationName) {
@@ -53,7 +53,7 @@
     </script>
 
     <script>
-        ApiRtcMeetServiceLib.setLogLevel('debug')
+        ApiRtcMeetServiceTsLib.setLogLevel('debug')
 
         const cloudUrl = 'https://valid2.apirtc.com';
         const apiKey = 'e17da9125276f8e8ad4e91222bbd5a36';
@@ -64,21 +64,37 @@
         function doCall() {
             console.log("doCall()")
             //setupEventSource();
-            caller = new ApiRtcMeetServiceLib.Caller(apiKey, topic,
-                {
-                    onConversation: (conversationName) => {
-                        doRenderRoom(conversationName)
-                    },
-                    onConnected: (connected) => {
-                        document.getElementById("connected").innerHTML = new Boolean(connected).toString();
-                    }
-                })
+            if (!caller) {
+                caller = new ApiRtcMeetServiceTsLib.Caller({ apiKey }, topic,
+                    {
+                        onConversation: (conversationInfo) => {
+                            console.log('onConversation', conversationInfo)
+                            // as we received a conversation, we can close the Caller
+                            caller.close()
+
+                            // update DOM
+                            document.getElementById("start-call-btn").disabled = false;
+                            document.getElementById("stop-call-btn").disabled = true;
+
+                            doRenderRoom(conversationInfo.name)
+                        },
+                        onConnected: (connected) => {
+                            document.getElementById("connected").innerHTML = new Boolean(connected).toString();
+                        }
+                    })
+                document.getElementById("start-call-btn").disabled = true;
+            }
         }
 
         function stopCall() {
             console.log("stopCall()")
             //deleteCaller();
-            caller.close()
+            if (caller) {
+                console.log("closing caller...")
+                caller.close().catch((error) => { });
+                caller = undefined;
+            }
+            document.getElementById("start-call-btn").disabled = false;
         }
 
         window.onunload = () => {
@@ -93,8 +109,8 @@
 
     </script>
 
-    <button onclick="doCall()">Call</button>
-    <button onclick="stopCall()">stop</button>
+    <button id="start-call-btn" onclick="doCall()">Call</button>
+    <button id="stop-call-btn" onclick="stopCall()" disabled="true">stop</button>
     <h2>SSE Connected: <span id="connected"></span></h2>
     <hr>
 

@@ -35,12 +35,10 @@
     <script src="./mui-react-room/dist/mui-react-room.production.min.js"></script>
 
     <!-- Load ApiRTC Meet Service libs -->
-    <script src="./meet-service-lib/dist/meet-service-lib.production.min.js"></script>
+    <script src="./meet-service-lib/meet-service-tslib/dist/meet-service-tslib.production.min.js"></script>
 
     <h1>Assistant App</h1>
     <p>This page demonstrates using ApiRTC/React with no build tooling.</p>
-
-    -->
 
     <h2>Conversation Name: <span id="conversation-name"></span></h2>
     <div id="room-container"></div>
@@ -60,18 +58,22 @@
 
         document.getElementById("conversation-name").innerHTML = conversationName;
 
-        const callee = new ApiRtcMeetServiceLib.Callee(apiKey, topic,
+        console.log(`SCRIPT START`)
+
+        const callee = new ApiRtcMeetServiceTsLib.Callee({ apiKey }, topic,
             {
                 onCallersSize: (size) => {
+                    console.log(`Callee: callers-size=${size}`)
                     document.getElementById("callers-size").innerHTML = size;
                 },
                 onConnected: (connected) => {
+                    console.log(`Callee connected=${connected}`)
                     document.getElementById("connected").innerHTML = new Boolean(connected).toString();
                 }
             })
 
         function answer() {
-            callee.answer(conversationName).then(() => {
+            callee.answer({ cloudUrl, apiKey, name: conversationName }).then(() => {
                 console.log("Answer sent")
             }).catch(() => {
                 console.error("Failed to answer")
@@ -100,6 +102,8 @@
         }
 
         doRenderRoom(conversationName)
+
+        console.log(`SCRIPT END`)
     </script>
 </body>
 
