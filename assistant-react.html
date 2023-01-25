@@ -36,6 +36,9 @@
 
     <!-- Load ApiRTC Meet Service libs -->
     <script src="./meet-service-lib/meet-service-tslib/dist/meet-service-tslib.production.min.js"></script>
+    <script src="./meet-service-lib/meet-service-react-hooks/dist/meet-service-react-hooks.production.min.js"></script>
+    <script
+        src="./meet-service-lib/meet-service-mui-react-components/dist/meet-service-mui-react-components.production.min.js"></script>
 
     <h1>Assistant App</h1>
     <p>This page demonstrates using ApiRTC/React with no build tooling.</p>
@@ -43,11 +46,8 @@
     <h2>Conversation Name: <span id="conversation-name"></span></h2>
     <div id="room-container"></div>
 
-    <h2>Number of callers: <span id="callers-size"></span></h2>
 
-    <h2>SSE Connected: <span id="connected"></span></h2>
-
-    <button onclick="answer()">Answer</button>
+    <div id="react-answer-button-container"></div>
 
     <script>
         const cloudUrl = 'https://valid2.apirtc.com';
@@ -59,26 +59,6 @@
         document.getElementById("conversation-name").innerHTML = conversationName;
 
         console.log(`SCRIPT START`)
-
-        const callee = new ApiRtcMeetServiceTsLib.Callee({ apiKey }, topic,
-            {
-                onCallersSize: (size) => {
-                    console.log(`Callee: callers-size=${size}`)
-                    document.getElementById("callers-size").innerHTML = size;
-                },
-                onConnected: (connected) => {
-                    console.log(`Callee connected=${connected}`)
-                    document.getElementById("connected").innerHTML = new Boolean(connected).toString();
-                }
-            })
-
-        function answer() {
-            callee.answer({ cloudUrl, apiKey, name: conversationName }).then(() => {
-                console.log("Answer sent")
-            }).catch(() => {
-                console.error("Failed to answer")
-            })
-        }
 
         function doRenderRoom(conversationName) {
             const domContainer = document.querySelector('#room-container');
@@ -101,7 +81,32 @@
             }, 1000)
         }
 
+        function doRenderAnswerButton(conversationName) {
+            const domContainer = document.querySelector('#react-answer-button-container');
+
+            // Unmount the previous Room if there was one, otherwise the next
+            // won't behave fine (for some reason to be investigated ?)
+            ReactDOM.unmountComponentAtNode(domContainer);
+
+            console.log('Timeout 1s...')
+            setTimeout(() => {
+                console.log('Rendering AnswerButton')
+                ReactDOM.render(React.createElement(
+                    ApiRtcMeetServiceMuiReactComponents.AnswerButton,
+                    {
+                        credentials: { apiKey: 'e17da9125276f8e8ad4e91222bbd5a36' },
+                        topic: 'c992fedb72b4fd7092321283',
+                        conversationInfo: {
+                            name: conversationName
+                        }
+                    }
+                ), domContainer)
+            }, 1000)
+        }
+
         doRenderRoom(conversationName)
+
+        doRenderAnswerButton(conversationName)
 
         console.log(`SCRIPT END`)
     </script>

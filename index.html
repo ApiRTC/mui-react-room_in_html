@@ -16,22 +16,45 @@
 </head>
 
 <body>
+
+    <!-- Load React, required by react-lib (as peer dependency) -->
+    <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+
+    <!-- Load Material UI -->
+    <script src="https://unpkg.com/@emotion/react@11.10.5/dist/emotion-react.umd.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@emotion/styled@11.10.5/dist/emotion-styled.umd.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@mui/material@latest/umd/material-ui.production.min.js" crossorigin></script>
+
+    <!-- Load ApiRTC -->
+    <script type="text/javascript" src="https://cloud.apirtc.com/apiRTC/apiRTC-latest.min.js"></script>
+
+    <!-- Load ApiRTC React libs -->
+    <!-- <script src="./react-lib.production.min.js"></script> commented out if react-lib is a dependency (not a peer dep) of mui-react-room -->
+    <script src="./mui-react-lib/dist/mui-react-lib.production.min.js"></script>
+    <script src="./mui-react-room/dist/mui-react-room.production.min.js"></script>
+
+    <script src="./meet-service-lib/meet-service-tslib/dist/meet-service-tslib.production.min.js"></script>
+    <script src="./meet-service-lib/meet-service-react-hooks/dist/meet-service-react-hooks.production.min.js"></script>
+    <script
+        src="./meet-service-lib/meet-service-mui-react-components/dist/meet-service-mui-react-components.production.min.js"></script>
+
+
     <h2>Add ApiRTC Conversation Room in One Minute</h2>
     <p>This page demonstrates using ApiRTC/React with no build tooling.</p>
 
     <p>A button (react):</p>
-    <div id="button_container"></div>
+    <div id="button-container"></div>
     <p>A button (iframe):</p>
     <iframe id="iframe" src="http://localhost:6002/" frameBorder="0" scrolling="no"></iframe>
 
     <hr>
     <p>A button with SSE:</p>
 
-    <script src="./meet-service-lib/meet-service-tslib/dist/meet-service-tslib.production.min.js"></script>
-
     <script>
         function doRenderRoom(conversationName) {
-            var domContainer = document.querySelector('#room_container');
+            const domContainer = document.querySelector('#room-container');
 
             // Unmount the previous Room if there was one, otherwise the next
             // won't behave fine (for some reason to be investigated ?)
@@ -45,7 +68,13 @@
                     {
                         name: conversationName,
                         credentials: { apiKey: 'e17da9125276f8e8ad4e91222bbd5a36' },
-                        registerInformation: { cloudUrl: 'https://valid2.apirtc.com' }
+                        registerInformation: { cloudUrl: 'https://valid2.apirtc.com' },
+                        onLeave: () => {
+                            setTimeout(() => {
+                                ReactDOM.unmountComponentAtNode(domContainer);
+                            }, 1000)
+                            doRenderCallButton()
+                        }
                     }
                 ), domContainer)
             }, 1000)
@@ -67,7 +96,7 @@
             if (!caller) {
                 caller = new ApiRtcMeetServiceTsLib.Caller({ apiKey }, topic,
                     {
-                        onConversation: (conversationInfo) => {
+                        onConversationInfo: (conversationInfo) => {
                             console.log('onConversation', conversationInfo)
                             // as we received a conversation, we can close the Caller
                             caller.close()
@@ -98,12 +127,16 @@
 
         window.onunload = () => {
             //deleteCaller();
-            caller.close()
+            if (caller) {
+                caller.close()
+            }
         }
 
         window.onbeforeunload = () => {
             //deleteCaller();
-            caller.close()
+            if (caller) {
+                caller.close()
+            }
         }
 
     </script>
@@ -112,6 +145,35 @@
     <!-- <button id="stop-call-btn" onclick="stopCall()" disabled="true">stop</button> -->
     <h2>SSE Connected: <span id="connected"></span></h2>
     <hr>
+    <h2>React CallButton</h2>
+    <div id="react-call-button-container"></div>
+    <script>
+        function doRenderCallButton() {
+            const domContainer = document.querySelector('#react-call-button-container');
+
+            // Unmount the previous Room if there was one, otherwise the next
+            // won't behave fine (for some reason to be investigated ?)
+            ReactDOM.unmountComponentAtNode(domContainer);
+
+            console.log('Timeout 1s...')
+            setTimeout(() => {
+                console.log('Rendering CallButton')
+                ReactDOM.render(React.createElement(
+                    ApiRtcMeetServiceMuiReactComponents.CallButton,
+                    {
+                        credentials: { apiKey: 'e17da9125276f8e8ad4e91222bbd5a36' },
+                        topic: 'c992fedb72b4fd7092321283',
+                        onConversationInfo: (conversationInfo) => {
+                            doRenderRoom(conversationInfo.name)
+                            ReactDOM.unmountComponentAtNode(domContainer);
+                        }
+                    }
+                ), domContainer)
+            }, 1000)
+        }
+    </script>
+    <script>doRenderCallButton()</script>
+    <hr>
 
     <p>A room:</p>
     <!-- Draggable DIV -->
@@ -119,30 +181,12 @@
         <!-- Include a header DIV with the same name as the draggable DIV, followed by "header" -->
         <div id="mydivheader">Test Room (Click here to move)</div>
         <!-- We will put our React component inside this div. -->
-        <div id="room_container" style="border: medium solid #0078D4;"></div>
+        <div id="room-container" style="border: medium solid #0078D4;"></div>
     </div>
-
-    <!-- Load React, required by react-lib (as peer dependency) -->
-    <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
-    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
-
-    <!-- Load Material UI -->
-    <script src="https://unpkg.com/@emotion/react@11.10.5/dist/emotion-react.umd.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@emotion/styled@11.10.5/dist/emotion-styled.umd.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@mui/material@latest/umd/material-ui.production.min.js" crossorigin></script>
-
-    <!-- Load ApiRTC -->
-    <script type="text/javascript" src="https://cloud.apirtc.com/apiRTC/apiRTC-latest.min.js"></script>
-
-    <!-- Load ApiRTC React libs -->
-    <!-- <script src="./react-lib.production.min.js"></script> commented out if react-lib is a dependency (not a peer dep) of mui-react-room -->
-    <script src="./mui-react-lib/dist/mui-react-lib.production.min.js"></script>
-    <script src="./mui-react-room/dist/mui-react-room.production.min.js"></script>
 
     <!-- Load the Room Component -->
     <!-- <script type="module">
-        var domContainer = document.querySelector('#room_container');
+        var domContainer = document.querySelector('#room-container');
         ReactDOM.render(React.createElement(
             ApiRtcMuiReactRoom.Room,
             {
@@ -179,7 +223,7 @@
             console.log('onWatchEventHandler', event.data)
             if (event.data.conversationName) {
                 const conversationName = event.data.conversationName;
-                var domContainer = document.querySelector('#room_container');
+                var domContainer = document.querySelector('#room-container');
                 // Unmount the previous Room if there was one, otherwise the next
                 // won't behave fine (for some reason to be investigated ?)
                 ReactDOM.unmountComponentAtNode(domContainer);
@@ -220,7 +264,7 @@
         //const url = 'http://customer01.localhost:3000/api/calls';
         const url = 'http://localhost:8084/calls';
 
-        var domContainer = document.querySelector('#button_container');
+        var domContainer = document.querySelector('#button-container');
         ReactDOM.render(React.createElement(
             ApiRtcMuiReactRoom.CallButton,
             {
