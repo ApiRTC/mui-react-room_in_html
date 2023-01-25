@@ -61,7 +61,7 @@
 
         var caller;
 
-        function doCall() {
+        function onCallBtnPressed() {
             console.log("doCall()")
             //setupEventSource();
             if (!caller) {
@@ -73,8 +73,9 @@
                             caller.close()
 
                             // update DOM
-                            document.getElementById("start-call-btn").disabled = false;
-                            document.getElementById("stop-call-btn").disabled = true;
+                            // document.getElementById("start-call-btn").disabled = false;
+                            // document.getElementById("stop-call-btn").disabled = true;
+                            document.getElementById("call-btn").innerHTML = 'Call';
 
                             doRenderRoom(conversationInfo.name)
                         },
@@ -82,19 +83,17 @@
                             document.getElementById("connected").innerHTML = new Boolean(connected).toString();
                         }
                     })
-                document.getElementById("start-call-btn").disabled = true;
-            }
-        }
-
-        function stopCall() {
-            console.log("stopCall()")
-            //deleteCaller();
-            if (caller) {
+                // document.getElementById("start-call-btn").disabled = true;
+                // document.getElementById("stop-call-btn").disabled = false;
+                document.getElementById("call-btn").innerHTML = 'HangUp';
+            } else {
                 console.log("closing caller...")
                 caller.close().catch((error) => { });
                 caller = undefined;
+                // document.getElementById("start-call-btn").disabled = false;
+                // document.getElementById("stop-call-btn").disabled = true;
+                document.getElementById("call-btn").innerHTML = 'Call';
             }
-            document.getElementById("start-call-btn").disabled = false;
         }
 
         window.onunload = () => {
@@ -109,8 +108,8 @@
 
     </script>
 
-    <button id="start-call-btn" onclick="doCall()">Call</button>
-    <button id="stop-call-btn" onclick="stopCall()" disabled="true">stop</button>
+    <button id="call-btn" onclick="onCallBtnPressed()">Call</button>
+    <!-- <button id="stop-call-btn" onclick="stopCall()" disabled="true">stop</button> -->
     <h2>SSE Connected: <span id="connected"></span></h2>
     <hr>
 
