@@ -96,8 +96,8 @@
             if (!caller) {
                 caller = new ApiRtcMeetServiceTsLib.Caller({ apiKey }, topic,
                     {
-                        onConversationInfo: (conversationInfo) => {
-                            console.log('onConversation', conversationInfo)
+                        onAnswer: (answerData) => {
+                            console.log('on_answer', answerData)
                             // as we received a conversation, we can close the Caller
                             caller.close()
 
@@ -106,7 +106,7 @@
                             // document.getElementById("stop-call-btn").disabled = true;
                             document.getElementById("call-btn").innerHTML = 'Call';
 
-                            doRenderRoom(conversationInfo.name)
+                            doRenderRoom(answerData.name)
                         },
                         onConnected: (connected) => {
                             document.getElementById("connected").innerHTML = new Boolean(connected).toString();
@@ -163,8 +163,8 @@
                     {
                         credentials: { apiKey: 'e17da9125276f8e8ad4e91222bbd5a36' },
                         topic: 'c992fedb72b4fd7092321283',
-                        onConversationInfo: (conversationInfo) => {
-                            doRenderRoom(conversationInfo.name)
+                        onAnswer: (data) => {
+                            doRenderRoom(data.name)
                             ReactDOM.unmountComponentAtNode(domContainer);
                         }
                     }

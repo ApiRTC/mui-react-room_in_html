@@ -94,10 +94,12 @@
                 ReactDOM.render(React.createElement(
                     ApiRtcMeetServiceMuiReactComponents.AnswerButton,
                     {
-                        credentials: { apiKey: 'e17da9125276f8e8ad4e91222bbd5a36' },
-                        topic: 'c992fedb72b4fd7092321283',
-                        conversationInfo: {
-                            name: conversationName
+                        credentials: { apiKey: apiKey },
+                        topic: topic,
+                        answerData: {
+                            name: conversationName,
+                            apiKey: apiKey,
+                            cloudUrl: cloudUrl
                         }
                     }
                 ), domContainer)
