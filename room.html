@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+
+    <title>Add ApiRTC Room in one minute in html page</title>
+
+    <!-- Load Google Material icons (required for mui Icon to work) -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <link href="./style.css" rel="stylesheet" />
+</head>
+
+<body>
+
+    <!-- Load React, required by react-lib (as peer dependency) -->
+    <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
+    <!-- <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script> -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+
+    <!-- Load Material UI -->
+    <script src="https://unpkg.com/@emotion/react@11.10.5/dist/emotion-react.umd.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@emotion/styled@11.10.5/dist/emotion-styled.umd.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@mui/material@latest/umd/material-ui.production.min.js" crossorigin></script>
+
+    <!-- <script src="./emotion-react.umd.min.js" crossorigin></script>
+    <script src="./emotion-styled.umd.min.js" crossorigin></script>
+    <script src="./material-ui.production.min.js" crossorigin></script> -->
+
+    <!-- Load ApiRTC -->
+    <script type="text/javascript" src="https://cloud.apirtc.com/apiRTC/apiRTC-latest.min.js"></script>
+
+    <!-- Load ApiRTC React libs -->
+    <!-- <script src="./react-lib/dist/react-lib.production.min.js"></script> -->
+    <!-- commented out if react-lib is a dependency (not a peer dep) of mui-react-room -->
+    <!-- <script src="./mui-react-lib/dist/mui-react-lib.production.min.js"></script> -->
+    <script src="./mui-react-room/dist/mui-react-room.production.min.js"></script>
+
+    <p>A room:</p>
+    <div id="mydiv">
+        <!-- We will put our React component inside this div. -->
+        <div id="room-container" style="border: medium solid #0078D4;"></div>
+    </div>
+
+    <!-- Load the Room Component (React@18 style) -->
+    <script type="module">
+        const domContainer = document.querySelector('#room-container');
+        const root = ReactDOM.createRoot(domContainer);
+        root.render(React.createElement(
+            ApiRtcMuiReactRoom.Room,
+            {
+                name: 'Test',
+                onLeave: () => {
+                    ReactDOM.unmountComponentAtNode(domContainer);
+                }
+            }
+        ));
+    </script>
+
+</body>
+
+</html>

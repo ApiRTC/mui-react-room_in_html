@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Add ApiRTC in One Minute in Html Page</title>
+    <!-- Load Google Material icons (required for mui Icon to work) -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <link href="./style.css" rel="stylesheet" />
+
+    <!-- To prevent caching libraries DEV only : DOES NOT WORK, run http-server -c-1 WORKS ! -->
+    <!-- <meta http-equiv="cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+     -->
+</head>
+
+<body>
+
+    <!-- Load ApiRTC -->
+    <!-- <script type="text/javascript" src="https://cloud.apirtc.com/apiRTC/apiRTC-latest.min.js"></script> -->
+
+    <!-- <script src="https://unpkg.com/@apirtc/apirtc@4.7.8/apiRTC.min.js" crossorigin></script> -->
+    <script src="https://unpkg.com/@apirtc/apirtc@5.0.3/apiRTC.min.js" crossorigin></script>
+
+    <button type="button" id="blur" onClick="onClick()">Blur/unblur</button>
+
+    <p>Video:</p>
+    <video id="video" autoplay="true" muted="true"></video>
+    <hr>
+
+    <script>
+
+        var userAgent = new apiRTC.UserAgent({
+            uri: 'apiKey:myDemoApiKey',
+        });
+
+        var localStream = null;
+        userAgent.createStream({}).then(function (stream) {
+            localStream = stream;
+            //Display the stream (audio+video) in the <video> element with id 'local'
+            stream.attachToElement(document.getElementById('video'))
+
+        });
+
+        var blurred = false;
+        var streamWithEffect = null;
+        function onClick() {
+            if (!blurred) {
+                localStream.applyVideoProcessor('blur').then((l_streamWithEffect) => {
+                    streamWithEffect = l_streamWithEffect;
+                    blurred = !blurred;
+                    console.info('applyVideoProcessor succeed', streamWithEffect)
+                    streamWithEffect.attachToElement(document.getElementById('video'));
+                }).catch(function (error) {
+                    console.error('applyVideoProcessor error', error)
+                });
+            } else {
+                blurred = !blurred;
+                console.info('release streamWithEffect', streamWithEffect)
+                
+                // Works on 4.7.8:
+                streamWithEffect.release();
+                // On 5.0.3, it does not work if streamWithEffect.release() is called
+
+                localStream.attachToElement(document.getElementById('video'));
+            }
+        }
+
+        // Works on all versions:
+        // var blurred = false;
+        // function onClick() {
+        //     localStream.applyVideoProcessor(blurred ? 'none' : 'blur').then((streamWithEffect) => {
+        //         blurred = !blurred;
+        //         console.info('applyVideoProcessor succeed', streamWithEffect)
+        //         streamWithEffect.attachToElement(document.getElementById('video'));
+        //     }).catch(function (error) {
+        //         console.error('applyVideoProcessor error', error)
+        //     });
+        // }
+
+    </script>
+
+
+</body>
+
+</html>
